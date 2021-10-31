@@ -82,18 +82,29 @@ async function run() {
         app.post('/myorders', async (req, res) => {
             const email = req.body.email;
             const options = {
-                projection: { _id: 0, order: 1 }
+                projection: { _id: 0, order: 1, status: 1 }
             }
             const query = { email: { $in: [email] } };
             const cursor = orderCollection.find(query, options);
             const ordersObject = await cursor.toArray();
-            // console.log(ordersObject);
-            const orderKeys = ordersObject.map(od => ObjectID(od.order)); //getting all the order id of the provided email
+            console.log(ordersObject);
+
+            //new try
+            let myOrders = [];
+            for (let i = 0; i < ordersObject.length; i++) {
+
+                const query = { _id: ObjectID(ordersObject[i].order) };
+                const myOrder = await destinationCollection.findOne(query);
+                myOrder.status = ordersObject[i].status;
+                myOrders.push(myOrder);
+            }
+            const result = myOrders;
+
+            /* const orderKeys = ordersObject.map(od => ObjectID(od.order)); //getting all the order id of the provided email
             //finding destinations by ids
             const queryDestinations = { _id: { $in: [...orderKeys] } };
             const cursor2 = destinationCollection.find(queryDestinations);
-            const result = await cursor2.toArray();
-            // console.log(result)
+            const result = await cursor2.toArray(); */
             res.json(result);
         })
 
