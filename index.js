@@ -122,6 +122,14 @@ async function run() {
             res.json(result);
         })
 
+        //Add New Service
+        app.post('/adddestinations', async (req, res) => {
+            const newDestination = req.body;
+            const result = await destinationCollection.insertOne(newDestination);
+            console.log(result);
+            res.json(result);
+        })
+
     }
     finally {
 
