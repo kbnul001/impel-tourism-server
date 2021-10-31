@@ -50,7 +50,7 @@ async function run() {
         //Get All Orders
         app.get('/allorders', async (req, res) => {
             const options = {
-                projection: { _id: 0, order: 1, name: 1 }
+                projection: { _id: 0, order: 1, name: 1, status: 1 }
             };
             const query = {};
             const cursor = orderCollection.find(query, options);
@@ -63,8 +63,8 @@ async function run() {
                 const query = { _id: ObjectID(allorderObject[i].order) };
                 const result = await destinationCollection.findOne(query);
                 result.orderedBy = allorderObject[i].name;
+                result.status = allorderObject[i].status;
                 allorders.push(result);
-                console.log("inside", allorders.length);
             }
             res.json(allorders);
 
@@ -87,13 +87,38 @@ async function run() {
             const query = { email: { $in: [email] } };
             const cursor = orderCollection.find(query, options);
             const ordersObject = await cursor.toArray();
-
+            // console.log(ordersObject);
             const orderKeys = ordersObject.map(od => ObjectID(od.order)); //getting all the order id of the provided email
             //finding destinations by ids
             const queryDestinations = { _id: { $in: [...orderKeys] } };
             const cursor2 = destinationCollection.find(queryDestinations);
             const result = await cursor2.toArray();
+            // console.log(result)
+            res.json(result);
+        })
 
+        //UPdate status
+        app.put('/allorders', async (req, res) => {
+            const order = req.body;
+
+            const filter = { name: order.orderedBy, order: order._id } //filter by the name of the person and order id
+            const updateDoc = {
+                $set: {
+                    status: "Approved"
+                },
+            };
+
+            const result = await orderCollection.updateOne(filter, updateDoc);
+            res.json(result);
+        })
+
+        //Delete Status
+        app.delete('/allorders', async (req, res) => {
+            const orderId = req.query.id;
+            const customerName = req.query.customerName;
+            const query = { name: customerName, order: orderId } //filter by the name of the person and order id
+            const result = await orderCollection.deleteOne(query);
+            console.log(result);
             res.json(result);
         })
 
